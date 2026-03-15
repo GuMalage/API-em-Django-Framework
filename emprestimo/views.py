@@ -1,64 +1,82 @@
 from django.shortcuts import render
 from django.shortcuts import get_list_or_404
 from django.shortcuts import get_object_or_404
-from .models import Emprestimo
-from .models import Devolucao
+from emprestimo.models import Emprestimo
+from emprestimo.models import Devolucao
 from livro.models import Livro
 from usuario.models import Usuario
+from emprestimo.forms import EmprestimoForm, DevolucaoForm
+from django.views.decorators.csrf import csrf_exempt
+import json
+from django.http import JsonResponse
 
+
+@csrf_exempt
 def cadastrar_emprestimo(request):
     if request.method == "POST":
-        livro_id = request.POST.get("titulo")
-        usuario_id = request.POST.get("preco")
-        dataEmprestimo = request.POST.get("dataEmprestimo")
+        data = json.loads(request.body)
 
-        livro = get_object_or_404(Livro, pk=livro_id)
-        usuario = get_object_or_404(Usuario, pk=usuario_id)
+        livro = get_object_or_404(Livro, pk=data["livro"])
+        usuario = get_object_or_404(Usuario, pk=data["usuario"])
 
-        if usuario.possuiEmprestimoAtivo == True:
-            return("O usuario possui emprestimo ativo!")
-        
-        if livro.emUso == True:
-            return("O livro está em uso:(")
+        if usuario.possuiEmprestimoAtivo:
+            return JsonResponse({"erro": "O usuário possui empréstimo ativo"})
 
-        try:
-            Emprestimo.objects.create(
-                livro=livro,
-                usuario=usuario,
-                dataEmprestimo=dataEmprestimo,
-            )
-            usuario.possuiEmprestimoAtivo = True
-            usuario.save()
-            livro.emUso = True
-            livro.save()
-            return()
-        except:
-            return()
+        if livro.emUso:
+            return JsonResponse({"erro": "O livro está em uso"})
 
+        Emprestimo.objects.create(
+            livro=livro,
+            usuario=usuario,
+            dataEmprestimo=data["dataEmprestimo"]
+        )
+
+        usuario.possuiEmprestimoAtivo = True
+        usuario.save()
+
+        livro.emUso = True
+        livro.save()
+
+        return JsonResponse({"msg": "Empréstimo cadastrado com sucesso"})
+
+    return JsonResponse({"erro": "Método não permitido"})
+
+@csrf_exempt
 def cadastrar_devolucao(request):
     if request.method == "POST":
-        emprestimo_id = request.POST.get("emprestimo")
-        dataDevolucao = request.POST.get("dataDevolucao")
-            
-        emprestimo = get_object_or_404(Emprestimo, pk=emprestimo_id)
+        data = json.loads(request.body)
+
+        emprestimo = get_object_or_404(Emprestimo, pk=data["emprestimo"])
 
         usuario = emprestimo.usuario
         livro = emprestimo.livro 
 
-        try:
-            Devolucao.objects.create(
-                emprestimo=emprestimo,
-                dataDevolucao=dataDevolucao,
-            )
-            usuario.possuiEmprestimoAtivo = False
-            usuario.save()
+      
+        Devolucao.objects.create(
+            emprestimo=emprestimo,
+            dataDevolucao=data["datadevolucao"],
+       )
+            
+        usuario.possuiEmprestimoAtivo = False
+        usuario.save()
 
-            livro.emUso = False
-            livro.save()
-            return()
-        except:
-            return()
+        livro.emUso = False
+        livro.save()
+
+        return JsonResponse({"msg": "Devoluçao registrada com sucesso"})
+
+    return JsonResponse({"erro": "Método não permitido"})
+            
         
 def listar_emprestimos_usuario(request, id):
     usuario = get_object_or_404(Usuario, pk=id)
-    return usuario.emprestimo.all()
+    emprestimos = usuario.emprestimos.all()
+
+    data = []
+    for e in emprestimos:
+        data.append({
+            "livro": e.livro.titulo,
+            "dataEmprestimo": e.dataEmprestimo
+        })
+
+    return JsonResponse(data, safe=False)
