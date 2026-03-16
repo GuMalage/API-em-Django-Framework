@@ -37,7 +37,7 @@ def cadastrar_usuario(request):
 def atualizar_usuario(request, id):
     usuario = get_object_or_404(Usuario, pk=id)
 
-    if request.method == 'POST':
+    if request.method == 'PUT':
         data = json.loads(request.body)
         form = UsuarioForm(data, instance=usuario)
         if form.is_valid():
@@ -48,32 +48,35 @@ def atualizar_usuario(request, id):
     
     return JsonResponse({"erro": "Método não permitido"})
 
-    
-def deletar_livro(request, id):
-    usuario = get_object_or_404(Usuario, pk=id)
-    if usuario != 404:
+@csrf_exempt  
+def deletar_usuario(request, id):
+    if request.method == "DELETE":
+        usuario = get_object_or_404(Usuario, pk=id)
         usuario.delete()
-        return JsonResponse({"msg": "Livro deletado com sucesso"})
-    else:
-        return JsonResponse({"msg": "Livro não encontrado"})
+        return JsonResponse({"msg": "Usuario deletado com sucesso"})
     
+    return JsonResponse({"erro": "Método não permitido"})
+    
+
 
 def buscar_usuario_por_id(request, id):
-    usuario = get_object_or_404(Usuario, pk=id)
-    return JsonResponse({
-        "nome": usuario.nome,
-        "cpf": usuario.cpf,
-        "Status de Emprestimo": "Possui Emprestimo em Aberto" if usuario.possuiEmprestimoAtivo else "Usuário Apto a Emprestimo"
-    })
-
-def listar_usuarios(request):
-    usuario = Usuario.objects.all()
-    
-    data = []
-    for usuario in usuario:
-        data.append({
+    if request.method == "GET":
+        usuario = get_object_or_404(Usuario, pk=id)
+        return JsonResponse({
             "nome": usuario.nome,
             "cpf": usuario.cpf,
             "Status de Emprestimo": "Possui Emprestimo em Aberto" if usuario.possuiEmprestimoAtivo else "Usuário Apto a Emprestimo"
         })
-    return JsonResponse(data, safe=False)
+
+def listar_usuarios(request):
+     if request.method == "GET":
+        usuario = Usuario.objects.all()
+        
+        data = []
+        for usuario in usuario:
+            data.append({
+                "nome": usuario.nome,
+                "cpf": usuario.cpf,
+                "Status de Emprestimo": "Possui Emprestimo em Aberto" if usuario.possuiEmprestimoAtivo else "Usuário Apto a Emprestimo"
+            })
+        return JsonResponse(data, safe=False)

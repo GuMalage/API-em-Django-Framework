@@ -54,7 +54,7 @@ def cadastrar_devolucao(request):
       
         Devolucao.objects.create(
             emprestimo=emprestimo,
-            dataDevolucao=data["datadevolucao"],
+            dataDevolucao=data["dataDevolucao"],
        )
             
         usuario.possuiEmprestimoAtivo = False
@@ -69,14 +69,17 @@ def cadastrar_devolucao(request):
             
         
 def listar_emprestimos_usuario(request, id):
-    usuario = get_object_or_404(Usuario, pk=id)
-    emprestimos = usuario.emprestimos.all()
+    if request.method == "GET":
+        usuario = get_object_or_404(Usuario, pk=id)
+        emprestimos = usuario.emprestimos.all()
 
-    data = []
-    for e in emprestimos:
-        data.append({
-            "livro": e.livro.titulo,
-            "dataEmprestimo": e.dataEmprestimo
-        })
+        data = []
+        for e in emprestimos:
+            data.append({
+                "livro": e.livro.titulo,
+                "dataEmprestimo": e.dataEmprestimo
+            })
 
-    return JsonResponse(data, safe=False)
+        return JsonResponse(data, safe=False)
+
+    return JsonResponse({"erro": "Método não permitido"})

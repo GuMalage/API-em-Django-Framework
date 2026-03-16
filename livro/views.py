@@ -37,43 +37,47 @@ def cadastrar_livro(request):
 def atualizar_livro(request, id):
     livro = get_object_or_404(Livro, pk=id)
 
-    if request.method == 'POST':
+    if request.method == "PUT":
         data = json.loads(request.body)
         form = LivroForm(data, instance=livro)
+
         if form.is_valid():
             form.save()
-            return JsonResponse({"msg": "Usuario Atualizado com sucesso"})
-    else:
-        return JsonResponse({"erros": form.errors})
+            return JsonResponse({"msg": "Livro atualizado com sucesso"})
+        else:
+            return JsonResponse({"erros": form.errors})
 
     return JsonResponse({"erro": "Método não permitido"})
 
+@csrf_exempt
 def deletar_livro(request, id):
-    livro = get_object_or_404(Livro, pk=id)
-    if livro != 404:
+    if request.method == "DELETE":
+        livro = get_object_or_404(Livro, pk=id)
         livro.delete()
-        return JsonResponse({"msg": "Usuário deletado com sucesso"})
-    else:
-        return JsonResponse({"msg": "Usuário não encontrado"})
+        return JsonResponse({"msg": "Livro deletado com sucesso"})
+    
+    return JsonResponse({"erro": "Método não permitido"})
 
 
 def buscar_livro_por_id(request, id):
-    livro = get_object_or_404(Livro, pk=id)
-    return JsonResponse({
-        "titulo": livro.titulo,
-        "autor": livro.autor,
-        "genero": livro.genero,
-        "Status": "Emprestado" if livro.emUso else "Disponível",
-    })
-
-def listar_livros(request):
-    livros = Livro.objects.all()
-
-    data = []
-    for livro in livros:
-        data.append({
+     if request.method == "GET":
+        livro = get_object_or_404(Livro, pk=id)
+        return JsonResponse({
             "titulo": livro.titulo,
-            "autor": livro.autor
+            "autor": livro.autor,
+            "genero": livro.genero,
+            "Status": "Emprestado" if livro.emUso else "Disponível",
         })
 
-    return JsonResponse(data, safe=False)
+def listar_livros(request):
+    if request.method == "GET":
+        livros = Livro.objects.all()
+
+        data = []
+        for livro in livros:
+            data.append({
+                "titulo": livro.titulo,
+                "autor": livro.autor
+            })
+
+        return JsonResponse(data, safe=False)
