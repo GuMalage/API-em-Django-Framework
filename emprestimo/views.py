@@ -5,7 +5,6 @@ from emprestimo.models import Emprestimo
 from emprestimo.models import Devolucao
 from livro.models import Livro
 from usuario.models import Usuario
-from emprestimo.forms import EmprestimoForm, DevolucaoForm
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.http import JsonResponse
@@ -25,7 +24,7 @@ def cadastrar_emprestimo(request):
         if livro.emUso:
             return JsonResponse({"erro": "O livro está em uso"})
 
-        Emprestimo.objects.create(
+        emprestimo = Emprestimo.objects.create(
             livro=livro,
             usuario=usuario,
             dataEmprestimo=data["dataEmprestimo"]
@@ -37,7 +36,14 @@ def cadastrar_emprestimo(request):
         livro.emUso = True
         livro.save()
 
-        return JsonResponse({"msg": "Empréstimo cadastrado com sucesso"})
+        response_data = {
+            "Usuario": usuario.nome,
+            "Livro Emprestado": livro.titulo,
+            "Data do Emprestimo": emprestimo.dataEmprestimo
+        }
+
+
+        return JsonResponse(response_data, safe=False)
 
     return JsonResponse({"erro": "Método não permitido"})
 
@@ -48,24 +54,32 @@ def cadastrar_devolucao(request):
 
         emprestimo = get_object_or_404(Emprestimo, pk=data["emprestimo"])
 
-        usuario = emprestimo.usuario
-        livro = emprestimo.livro 
+        if Devolucao.objects.filter(emprestimo=emprestimo).exists():
+            return JsonResponse({"erro": "Este empréstimo já foi devolvido"}, status=400)
 
-      
-        Devolucao.objects.create(
+        usuario = emprestimo.usuario
+        livro = emprestimo.livro
+
+        devolucao = Devolucao.objects.create(
             emprestimo=emprestimo,
             dataDevolucao=data["dataDevolucao"],
-       )
-            
+        )
+
         usuario.possuiEmprestimoAtivo = False
         usuario.save()
 
         livro.emUso = False
         livro.save()
 
-        return JsonResponse({"msg": "Devoluçao registrada com sucesso"})
+        response_data = {
+            "Usuario": usuario.nome,
+            "Livro Devolvido": livro.titulo,
+            "Data da Devolução": devolucao.dataDevolucao
+        }
 
-    return JsonResponse({"erro": "Método não permitido"})
+        return JsonResponse(response_data, safe=False)
+
+    return JsonResponse({"erro": "Método não permitido"}, status=405)
             
         
 def listar_emprestimos_usuario(request, id):
@@ -73,13 +87,17 @@ def listar_emprestimos_usuario(request, id):
         usuario = get_object_or_404(Usuario, pk=id)
         emprestimos = usuario.emprestimos.all()
 
-        data = []
+        response_data = []
         for e in emprestimos:
-            data.append({
+
+            devolucao = Devolucao.objects.filter(emprestimo=e).first()
+
+            response_data.append({
                 "livro": e.livro.titulo,
-                "dataEmprestimo": e.dataEmprestimo
+                "Data do Emprestimo": e.dataEmprestimo,
+                "Data de Devolucao": devolucao.dataDevolucao if devolucao else "Empréstimo ativo"
             })
 
-        return JsonResponse(data, safe=False)
+        return JsonResponse(response_data, safe=False)
 
-    return JsonResponse({"erro": "Método não permitido"})
+    return JsonResponse({"erro": "Método não permitido"}, status=405)

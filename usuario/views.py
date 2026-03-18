@@ -26,8 +26,12 @@ def cadastrar_usuario(request):
         form = UsuarioForm(data)
 
         if form.is_valid():
-            form.save()
-            return JsonResponse({"msg": "Usuário criado com sucesso"})
+            usuario = form.save()
+            response_data = {
+                "Nome": usuario.nome,
+                "Cpf": usuario.cpf
+            }
+            return JsonResponse(response_data, safe=False)
         else:
             return JsonResponse({"erros": form.errors})
 
@@ -42,7 +46,11 @@ def atualizar_usuario(request, id):
         form = UsuarioForm(data, instance=usuario)
         if form.is_valid():
             form.save()
-            return JsonResponse({"msg": "Usuario Atualizado com sucesso"})
+            response_data = {
+                "Nome": usuario.nome,
+                "Cpf": usuario.cpf
+            }
+            return JsonResponse(response_data, safe=False)
     else:
        return JsonResponse({"erro": form.errors})
     
@@ -56,7 +64,6 @@ def deletar_usuario(request, id):
         return JsonResponse({"msg": "Usuario deletado com sucesso"})
     
     return JsonResponse({"erro": "Método não permitido"})
-    
 
 
 def buscar_usuario_por_id(request, id):

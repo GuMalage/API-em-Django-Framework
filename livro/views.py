@@ -26,8 +26,14 @@ def cadastrar_livro(request):
         data = json.loads(request.body)
         form = LivroForm(data)
         if form.is_valid():
-            form.save()
-            return JsonResponse({"msg": "Livro Cadastrado com sucesso"})
+            livro = form.save()
+            response_data = {
+                "Titulo": livro.titulo,
+                "Autor": livro.autor,
+                "Genero": livro.genero
+            }
+
+            return JsonResponse(response_data, safe=False)
         else:
             return JsonResponse({"erro": form.errors})
     
@@ -43,7 +49,13 @@ def atualizar_livro(request, id):
 
         if form.is_valid():
             form.save()
-            return JsonResponse({"msg": "Livro atualizado com sucesso"})
+            response_data = {
+                "Titulo": livro.titulo,
+                "Autor": livro.autor,
+                "Genero": livro.genero
+            }
+
+            return JsonResponse(response_data, safe=False)
         else:
             return JsonResponse({"erros": form.errors})
 
@@ -77,7 +89,9 @@ def listar_livros(request):
         for livro in livros:
             data.append({
                 "titulo": livro.titulo,
-                "autor": livro.autor
+                "autor": livro.autor,
+                "genero": livro.genero,
+                "Status": "Emprestado" if livro.emUso else "Disponível",
             })
 
         return JsonResponse(data, safe=False)
