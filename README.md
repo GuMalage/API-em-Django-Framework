@@ -2,7 +2,7 @@
 
 API desenvolvida em Django para gerenciamento de usuários, livros, empréstimos e devoluções.
 
----
+
 
 ## 🚀 Tecnologias
 
@@ -10,7 +10,7 @@ API desenvolvida em Django para gerenciamento de usuários, livros, empréstimos
 * Django
 * JSON (requisições e respostas)
 
----
+
 
 ## 📌 Funcionalidades
 
@@ -22,7 +22,7 @@ API desenvolvida em Django para gerenciamento de usuários, livros, empréstimos
   * Usuário não pode ter mais de um empréstimo ativo
   * Livro não pode ser emprestado se estiver em uso
 
----
+
 
 ## 🔗 Endpoints
 
@@ -70,7 +70,7 @@ API desenvolvida em Django para gerenciamento de usuários, livros, empréstimos
   * DELETE → remoção
 * Algumas rotas utilizam `csrf_exempt` (apenas para testes)
 
----
+
 
 ## ▶️ Como executar
 
@@ -79,4 +79,5 @@ python manage.py runserver
 ```
 
 Guia Rápido Para a Utilização do Framework: https://docs.google.com/document/d/1Zn5os1ZFLASyINd9qBTltfDMLiGPeVHlBUuRzQv_7To/edit?tab=t.0#heading=h.exe6o94nstt0
+
 Apresentação do Projeto: https://docs.google.com/presentation/d/1MFuuOrB8OvQtlDtJ7PpMW8qeS_WE7ggYAqWTQ7WqbPI/edit?usp=sharing
